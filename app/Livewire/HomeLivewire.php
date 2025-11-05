@@ -78,11 +78,18 @@ class HomeLivewire extends Component
         $totalIncome = FinancialRecord::where('user_id', $this->auth->id)->where('type', 'income')->sum('amount');
         $totalExpense = FinancialRecord::where('user_id', $this->auth->id)->where('type', 'expense')->sum('amount');
 
+        // Data untuk Radial Chart (Persentase)
+        $totalTransactions = $totalIncome + $totalExpense;
+        $distributionSeries = [
+            $totalTransactions > 0 ? round(($totalIncome / $totalTransactions) * 100) : 0,
+            $totalTransactions > 0 ? round(($totalExpense / $totalTransactions) * 100) : 0,
+        ];
+
         return [
             'monthsLabels' => $monthlyStats['months'],
             'incomeSeries' => $monthlyStats['incomeSeries'],
             'expenseSeries' => $monthlyStats['expenseSeries'],
-            'totalsSeries' => [$totalIncome, $totalExpense]
+            'distributionSeries' => $distributionSeries,
         ];
     }
 
@@ -107,17 +114,17 @@ class HomeLivewire extends Component
         $totalExpense = FinancialRecord::where('user_id', $this->auth->id)->where('type', 'expense')->sum('amount');
         $balance = $totalIncome - $totalExpense;
 
-        $monthlyStats = $this->getMonthlyStats();
+        $chartData = $this->getChartData();
 
         return view('livewire.home-livewire', [
             'records' => $records,
             'totalIncome' => $totalIncome,
             'totalExpense' => $totalExpense,
             'balance' => $balance,
-            'chartMonthsLabels' => $monthlyStats['months'],
-            'chartIncomeSeries' => $monthlyStats['incomeSeries'],
-            'chartExpenseSeries' => $monthlyStats['expenseSeries'],
-            'chartTotalsSeries' => [$totalIncome, $totalExpense],
+            'chartMonthsLabels' => $chartData['monthsLabels'],
+            'chartIncomeSeries' => $chartData['incomeSeries'],
+            'chartExpenseSeries' => $chartData['expenseSeries'],
+            'chartDistributionSeries' => $chartData['distributionSeries'],
         ]);
     }
 
