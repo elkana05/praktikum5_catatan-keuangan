@@ -60,16 +60,8 @@ class TodoDetailLivewire extends Component
             $this->todo->save();
         }
 
-    $this->reset(['editCoverTodoFile']);
+        $this->reset(['editCoverTodoFile']);
 
-    $this->dispatch('closeModal', ['id' => 'editCoverTodoModal']);
-    $this->dispatch('swal', [
-        'title' => 'Berhasil',
-        'text' => 'Cover todo berhasil diperbarui.',
-        'icon' => 'success',
-        'toast' => true,
-        'position' => 'top-end',
-        'timer' => 2200,
-    ]);
+        $this->dispatch('closeModal', id: 'editCoverTodoModal');
     }
 }

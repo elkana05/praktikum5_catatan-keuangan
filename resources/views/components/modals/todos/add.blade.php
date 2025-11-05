@@ -16,25 +16,11 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Deskripsi</label>
-                        <input id="addTodoDescription" type="hidden" wire:model="addTodoDescription">
-                        <trix-editor input="addTodoDescription" class="trix-content" wire:ignore></trix-editor>
+                        <textarea class="form-control" rows="4" wire:model="addTodoDescription"></textarea>
                         @error('addTodoDescription')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
                     </div>
-                    <script>
-                        document.addEventListener('trix-change', function (e) {
-                            try {
-                                const input = e.target.inputElement;
-                                if (input && input.id === 'addTodoDescription') {
-                                    // Trigger input event so Livewire picks up the change
-                                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                                }
-                            } catch (err) {
-                                // ignore
-                            }
-                        });
-                    </script>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>

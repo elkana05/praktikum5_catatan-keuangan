@@ -26,24 +26,11 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Deskripsi</label>
-                        <input id="editTodoDescription" type="hidden" wire:model="editTodoDescription">
-                        <trix-editor input="editTodoDescription" class="trix-content" wire:ignore></trix-editor>
+                        <textarea class="form-control" rows="4" wire:model="editTodoDescription"></textarea>
                         @error('editTodoDescription')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
                     </div>
-                    <script>
-                        document.addEventListener('trix-change', function (e) {
-                            try {
-                                const input = e.target.inputElement;
-                                if (input && input.id === 'editTodoDescription') {
-                                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                                }
-                            } catch (err) {
-                                // ignore
-                            }
-                        });
-                    </script>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
