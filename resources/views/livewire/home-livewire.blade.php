@@ -2,52 +2,78 @@
     <div class="card">
         <div class="card-header d-flex">
             <div class="flex-fill">
-                <h3>Hay, {{ $auth->name }}</h3>
+                <h3>Halo, {{ $auth->name }}</h3>
             </div>
             <div>
                 <a href="{{ route('auth.logout') }}" class="btn btn-warning">Keluar</a>
             </div>
         </div>
         <div class="card-body">
+            {{-- Statistik Grafik --}}
+            <div class="mb-4">
+                @livewire('financial-chart-livewire')
+            </div>
+
             <div class="d-flex mb-2">
                 <div class="flex-fill">
-                    <h3>Daftar Todo</h3>
+                    <h3>Catatan Keuangan</h3>
                 </div>
                 <div>
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTodoModal">
-                        Tambah Todo
+                        Tambah Catatan
                     </button>
                 </div>
             </div>
+
+            {{-- Filter dan Pencarian --}}
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Cari deskripsi...">
+                </div>
+                <div class="col-md-3">
+                    <select wire:model.live="filterType" class="form-select">
+                        <option value="">Semua Tipe</option>
+                        <option value="income">Pemasukan</option>
+                        <option value="expense">Pengeluaran</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" wire:model.live="filterDate" class="form-control">
+                </div>
+                <div class="col-md-3 text-end">
+                    <button wire:click="resetFilters" class="btn btn-secondary">Reset Filter</button>
+                </div>
+            </div>
+
             <table class="table table-striped">
                 <tr class="table-light">
                     <th>No</th>
-                    <th>Judul</th>
-                    <th>Dibuat pada</th>
-                    <th>Diubah pada</th>
-                    <th>Status</th>
+                    <th>Tanggal</th>
+                    <th>Deskripsi</th>
+                    <th>Jumlah</th>
+                    <th>Tipe</th>
                     <th>Tindakan</th>
                 </tr>
                 @foreach ($todos as $key => $todo)
                     <tr>
                         <td>{{ $key + 1 }}</td>
-                        <td>{{ $todo->title }}</td>
-                        <td>{{ date('d F Y, H:i', strtotime($todo->created_at)) }}</td>
-                        <td>{{ date('d F Y, H:i', strtotime($todo->updated_at)) }}</td>
+                        <td>{{ date('d F Y', strtotime($todo->transaction_date)) }}</td>
+                        <td>{{ $todo->description }}</td>
+                        <td>Rp {{ number_format($todo->amount, 0, ',', '.') }}</td>
                         <td>
-                            @if ($todo->is_finished)
-                                <span class="badge bg-success">Selesai</span>
+                            @if ($todo->type == 'income')
+                                <span class="badge bg-success">Pemasukan</span>
                             @else
-                                <span class="badge bg-danger">Belum selesai</span>
+                                <span class="badge bg-danger">Pengeluaran</span>
                             @endif
                         </td>
                         <td>
                             <a href="{{ route('app.todos.detail', ['todo_id' => $todo->id]) }}"
                                 class="btn btn-sm btn-info">
-                                Detail
+                                Lihat
                             </a>
                             <button wire:click="prepareEditTodo({{ $todo->id }})" class="btn btn-sm btn-warning">
-                                Edit
+                                Ubah
                             </button>
                             <button wire:click="prepareDeleteTodo({{ $todo->id }})" class="btn btn-sm btn-danger">
                                 Hapus
@@ -55,12 +81,15 @@
                         </td>
                     </tr>
                 @endforeach
-                @if (sizeof($todos) === 0)
+                @if ($todos->isEmpty())
                     <tr>
-                        <td colspan="6" class="text-center">Belum ada data todo yang tersedia.</td>
+                        <td colspan="6" class="text-center">Belum ada catatan keuangan yang tersedia.</td>
                     </tr>
                 @endif
             </table>
+            <div class="mt-3">
+                {{ $todos->links() }}
+            </div>
         </div>
     </div>
 

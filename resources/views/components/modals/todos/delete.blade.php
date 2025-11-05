@@ -3,15 +3,15 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Hapus Todo</h5>
+                    <h5 class="modal-title">Hapus Catatan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-danger">
-                        Apakah kamu yakin ingin menghapus todo dengan judul <strong>"{{ $deleteTodoTitle }}"</strong>?
+                        Apakah kamu yakin ingin menghapus catatan <strong>"{{ $deleteTodoTitle }}"</strong>? Tindakan ini tidak dapat dibatalkan.
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Konfirmasi Judul</label>
+                        <label class="form-label">Untuk konfirmasi, ketik <strong>HAPUS</strong> di bawah ini.</label>
                         <input type="text" class="form-control" wire:model="deleteTodoConfirmTitle">
                         @error('deleteTodoConfirmTitle')
                             <span class="text-danger">{{ $message }}</span>
