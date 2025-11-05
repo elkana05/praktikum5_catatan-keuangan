@@ -29,9 +29,14 @@
                         });
                     </script>
                     <script>
-                        document.addEventListener('livewire:init', () => {
-                            Livewire.on('trix-input', data => @this.set(data.field, data.value, true));
-                        })
+                        document.addEventListener('livewire:initialized', () => {
+                            const trixEditor = document.querySelector("#editRecordModal trix-editor");
+
+                            // Event untuk mengisi Trix editor saat modal edit dibuka
+                            @this.on('trix-value-updated', (event) => {
+                                trixEditor.editor.loadHTML(event.description);
+                            });
+                        });
                     </script>
 
                     <div class="mb-3">
