@@ -3,12 +3,12 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Ubah Bukti Transaksi</h5>
+                    <h5 class="modal-title">Ubah Cover Todo</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Pilih Gambar Bukti</label>
+                        <label class="form-label">Pilih Cover</label>
                         <input type="file" class="form-control" wire:model="editCoverTodoFile">
                         @error('editCoverTodoFile')
                             <span class="text-danger">{{ $message }}</span>

@@ -47,25 +47,21 @@ class TodoDetailLivewire extends Component
 
         if ($this->editCoverTodoFile) {
             // Hapus cover lama jika ada
-            if ($this->todo->receipt_image && Storage::disk('public')->exists($this->todo->receipt_image)) {
-                Storage::disk('public')->delete($this->todo->receipt_image);
+            if ($this->todo->cover && Storage::disk('public')->exists($this->todo->cover)) {
+                Storage::disk('public')->delete($this->todo->cover);
             }
 
             $userId = $this->auth->id;
             $dateNumber = now()->format('YmdHis');
             $extension = $this->editCoverTodoFile->getClientOriginalExtension();
             $filename = $userId . '_' . $dateNumber . '.' . $extension;
-            $path = $this->editCoverTodoFile->storeAs('receipts', $filename, 'public');
-            $this->todo->receipt_image = $path;
+            $path = $this->editCoverTodoFile->storeAs('covers', $filename, 'public');
+            $this->todo->cover = $path;
             $this->todo->save();
         }
 
         $this->reset(['editCoverTodoFile']);
 
         $this->dispatch('closeModal', id: 'editCoverTodoModal');
-        // Tampilkan notifikasi sukses
-        $this->dispatch('swal:success', [
-            'message' => 'Bukti transaksi berhasil diubah.'
-        ]);
     }
 }

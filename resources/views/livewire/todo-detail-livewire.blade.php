@@ -8,30 +8,26 @@
                     </small>
                 </a>
                 <h3>
-                    Detail Catatan Keuangan
-                    @if ($todo->type == 'income')
-                        <small class="badge bg-success">Pemasukan</small>
+                    {{ $todo->title }}
+                    @if ($todo->is_finished)
+                        <small class="badge bg-success">Selesai</small>
                     @else
-                        <small class="badge bg-danger">Pengeluaran</small>
+                        <small class="badge bg-danger">Belum selesai</small>
                     @endif
                 </h3>
-                <p class="text-muted">Tanggal: {{ date('d F Y', strtotime($todo->transaction_date)) }}</p>
             </div>
             <div>
                 <button class="btn btn-warning" data-bs-target="#editCoverTodoModal" data-bs-toggle="modal">
-                    Ubah Bukti
+                    Ubah Cover
                 </button>
             </div>
         </div>
         <div class="card-body">
-            <h4>Jumlah: Rp {{ number_format($todo->amount, 0, ',', '.') }}</h4>
-            <p style="font-size: 18px;">Deskripsi: {{ $todo->description }}</p>
-            <hr>
-            <h5>Bukti Transaksi</h5>
-            @if ($todo->receipt_image)
-                <img src="{{ asset('storage/' . $todo->receipt_image) }}" alt="Bukti Transaksi" style="max-width: 100%;">
+            @if ($todo->cover)
+                <img src="{{ asset('storage/' . $todo->cover) }}" alt="Cover" style="max-width: 100%;">
                 <hr>
             @endif
+            <p style="font-size: 18px;">{{ $todo->description }}</p>
         </div>
     </div>
 
