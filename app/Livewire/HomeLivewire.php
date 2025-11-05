@@ -33,11 +33,11 @@ class HomeLivewire extends Component
     public function handleModalClosed(array $data)
     {
         switch ($data['modalId']) {
-            case 'editRecordModal':
-            case 'detailRecordModal':
+            case 'formModal':
+            case 'detailModal':
             case 'deleteRecordModal':
                 $this->reset(['detailRecordId', 'detailDescription', 'detailType', 'detailAmount', 'detailRecordDate', 'detailAttachment']);
-                $this->reset(['editRecordId', 'editDescription', 'editType', 'editAmount', 'editRecordDate', 'editAttachment', 'existingAttachment']);
+                $this->reset(['editRecordId', 'editDescription', 'editType', 'editAmount', 'editRecordDate', 'editAttachment', 'existingAttachment', 'addDescription', 'addAmount', 'addRecordDate', 'addAttachment']);
                 $this->reset(['deleteRecordId', 'deleteRecordDescription', 'deleteRecordConfirmDescription']);
                 $this->resetErrorBag();
                 break;
@@ -116,6 +116,9 @@ class HomeLivewire extends Component
 
         $chartData = $this->getChartData();
 
+        // Kirim data chart terbaru ke frontend setiap kali komponen di-render
+        $this->dispatch('refresh-chart', $chartData);
+
         return view('livewire.home-livewire', [
             'records' => $records,
             'totalIncome' => $totalIncome,
@@ -127,25 +130,18 @@ class HomeLivewire extends Component
             'chartDistributionSeries' => $chartData['distributionSeries'],
         ]);
     }
-
-    // Reset halaman pagination saat search atau filter berubah
-    public function updatedSearch()
+    
+    // Reset halaman pagination saat search atau filter berubah.
+    // Livewire akan secara otomatis me-render ulang komponen setelah ini,
+    // dan kita akan memicu refresh chart dari sana.
+    public function updatingSearch()
     {
         $this->resetPage();
-        $this->dispatch('refresh-chart', $this->getChartData());
     }
 
-    public function updatedFilterType()
+    public function updatingFilterType()
     {
         $this->resetPage();
-        $this->dispatch('refresh-chart', $this->getChartData());
-    }
-
-    // Method to trigger search
-    public function doSearch()
-    {
-        $this->resetPage();
-        $this->dispatch('refresh-chart', $this->getChartData());
     }
 
     // Add Record
@@ -158,6 +154,7 @@ class HomeLivewire extends Component
     public function mountAdd()
     {
         $this->addRecordDate = now()->format('Y-m-d');
+        $this->dispatch('showModal', ['id' => 'formModal']);
     }
 
     public function addRecord()
@@ -191,7 +188,7 @@ class HomeLivewire extends Component
         $this->mountAdd(); // Set default date again
 
         // Tutup modal
-    $this->dispatch('closeModal', ['id' => 'addRecordModal']);
+    $this->dispatch('closeModal', ['id' => 'formModal']);
     $this->dispatch('trix-reset', ['id' => 'addDescription']);
     $this->dispatch('refresh-chart', $this->getChartData());
         // Notifikasi sukses (emit via Livewire dispatch so layout listens with Livewire.on)
@@ -226,7 +223,7 @@ class HomeLivewire extends Component
             $this->existingAttachment = $record->attachment;
             $this->editAttachment = null; // Reset file input
 
-            $this->dispatch('showModal', ['id' => 'editRecordModal']);
+            $this->dispatch('showModal', ['id' => 'formModal']);
             $this->dispatch('trix-input', ['field' => 'editDescription', 'value' => $record->description]);
         }
     }
@@ -261,7 +258,7 @@ class HomeLivewire extends Component
                 'attachment' => $attachmentPath,
             ]);
 
-            $this->dispatch('closeModal', ['id' => 'editRecordModal']);
+            $this->dispatch('closeModal', ['id' => 'formModal']);
             $this->dispatch('refresh-chart', $this->getChartData());
             $this->dispatch('swal', [
                 'title' => 'Berhasil',
@@ -338,7 +335,7 @@ class HomeLivewire extends Component
             $this->detailRecordDate = $record->record_date->format('d F Y');
             $this->detailAttachment = $record->attachment;
 
-            $this->dispatch('showModal', ['id' => 'detailRecordModal']);
+            $this->dispatch('showModal', ['id' => 'detailModal']);
         }
     }
 }
