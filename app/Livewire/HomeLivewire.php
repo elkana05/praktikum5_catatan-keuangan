@@ -5,133 +5,175 @@ namespace App\Livewire;
 use App\Models\Todo;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class HomeLivewire extends Component
 {
+    use WithPagination;
     public $auth;
+    protected $paginationTheme = 'bootstrap';
+
+    // Properti untuk Tambah Catatan
+    public $addTodoTitle;
+    public $addTodoAmount;
+    public $addTodoType = 0; // Default: Pengeluaran
+    public $addTodoDescription;
+
+    // Properti untuk Edit Catatan
+    public $editTodoId;
+    public $editTodoTitle;
+    public $editTodoAmount;
+    public $editTodoType;
+    public $editTodoDescription;
+
+    // Properti untuk Hapus Catatan
+    public $deleteTodoId;
+    public $deleteTodoTitle;
+    public $deleteTodoConfirmTitle;
+
+    // Properti untuk Pencarian dan Filter
+    public $search = '';
+    public $filterType = '';
 
     public function mount()
     {
         $this->auth = Auth::user();
     }
 
-    public function render()
+    public function updatingSearch()
     {
-        $todos = Todo::where('user_id', $this->auth->id)->orderBy('created_at', 'desc')->get();
-        $data = [
-            'todos' => $todos
-        ];
-        return view('livewire.home-livewire', $data);
+        $this->resetPage();
     }
 
-    // Add Todo
-    public $addTodoTitle;
-    public $addTodoDescription;
+    public function updatingFilterType()
+    {
+        $this->resetPage();
+    }
 
     public function addTodo()
     {
         $this->validate([
             'addTodoTitle' => 'required|string|max:255',
-            'addTodoDescription' => 'required|string',
+            'addTodoAmount' => 'required|numeric',
+            'addTodoType' => 'required|boolean',
+            'addTodoDescription' => 'nullable|string',
         ]);
 
-        // Simpan todo ke database
         Todo::create([
-            'title' => $this->addTodoTitle,
-            'description' => $this->addTodoDescription,
             'user_id' => $this->auth->id,
-            'is_finished' => false,
+            'title' => $this->addTodoTitle,
+            'add_todo_amount' => $this->addTodoAmount,
+            'type' => $this->addTodoType,
+            'description' => $this->addTodoDescription,
         ]);
 
-        // Reset the form
-        $this->reset(['addTodoTitle', 'addTodoDescription']);
-
-        // Tutup modal
-        $this->dispatch('closeModal', id: 'addTodoModal');
+        $this->reset(['addTodoTitle', 'addTodoAmount', 'addTodoType', 'addTodoDescription']);
+        $this->dispatch('close-modal', 'addTodoModal'); // Tetap tutup modal
+        $this->dispatch('show-alert', [
+            'type' => 'success',
+            'title' => 'Berhasil!',
+            'message' => 'Catatan keuangan berhasil ditambahkan.',
+        ]);
     }
 
-    // Edit Todo
-    public $editTodoId;
-    public $editTodoTitle;
-    public $editTodoIsFinished;
-    public $editTodoDescription;
-
-    public function prepareEditTodo($id)
+    public function prepareEditTodo($todoId)
     {
-        // Pastikan todo milik user yang sedang login
-        $todo = Todo::where('id', $id)
-            ->where('user_id', $this->auth->id)->first();
-        if (!$todo) {
-            return;
+        $todo = Todo::find($todoId);
+        if ($todo && $todo->user_id === $this->auth->id) {
+            $this->editTodoId = $todo->id;
+            $this->editTodoTitle = $todo->title;
+            $this->editTodoAmount = $todo->add_todo_amount;
+            $this->editTodoType = $todo->type;
+            $this->editTodoDescription = $todo->description;
+
+            $this->dispatch('open-modal', 'editTodoModal');
         }
-
-        $this->editTodoId = $todo->id;
-        $this->editTodoTitle = $todo->title;
-        $this->editTodoIsFinished = $todo->is_finished ? '1' : '0';
-        $this->editTodoDescription = $todo->description;
-
-        $this->dispatch('showModal', id: 'editTodoModal');
     }
 
     public function editTodo()
     {
         $this->validate([
             'editTodoTitle' => 'required|string|max:255',
-            'editTodoIsFinished' => 'required|boolean',
-            'editTodoDescription' => 'required|string',
+            'editTodoAmount' => 'required|numeric',
+            'editTodoType' => 'required|boolean',
+            'editTodoDescription' => 'nullable|string',
         ]);
 
-        // Pastikan todo milik user yang sedang login
-        $todo = Todo::where('id', $this->editTodoId)
-            ->where('user_id', $this->auth->id)->first();
-        if (!$todo) {
-            $this->addError('editTodoTitle', 'Data todo tidak tersedia.');
-            return;
+        $todo = Todo::find($this->editTodoId);
+        if ($todo && $todo->user_id === $this->auth->id) {
+            $todo->update([
+                'title' => $this->editTodoTitle,
+                'add_todo_amount' => $this->editTodoAmount,
+                'type' => $this->editTodoType,
+                'description' => $this->editTodoDescription,
+            ]);
         }
-        $todo->title = $this->editTodoTitle;
-        $todo->is_finished = $this->editTodoIsFinished;
-        $todo->description = $this->editTodoDescription;
-        $todo->save();
 
-        $this->reset(['editTodoId', 'editTodoTitle', 'editTodoDescription', 'editTodoIsFinished']);
-        $this->dispatch('closeModal', id: 'editTodoModal');
+        $this->reset(['editTodoId', 'editTodoTitle', 'editTodoAmount', 'editTodoType', 'editTodoDescription']);
+        $this->dispatch('close-modal', 'editTodoModal'); // Tetap tutup modal
+        $this->dispatch('show-alert', [
+            'type' => 'success',
+            'title' => 'Berhasil!',
+            'message' => 'Catatan keuangan berhasil diperbarui.',
+        ]);
     }
 
-    // Delete Todo
-    public $deleteTodoId;
-    public $deleteTodoTitle;
-    public $deleteTodoConfirmTitle;
-
-    public function prepareDeleteTodo($id)
+    public function prepareDeleteTodo($todoId)
     {
-        // Pastikan todo milik user yang sedang login
-        $todo = Todo::where('id', $id)
-            ->where('user_id', $this->auth->id)->first();
-        if (!$todo) {
-            return;
-        }
+        $todo = Todo::find($todoId);
+        if ($todo && $todo->user_id === $this->auth->id) {
+            $this->deleteTodoId = $todo->id;
+            $this->deleteTodoTitle = $todo->title;
+            $this->deleteTodoConfirmTitle = '';
 
-        $this->deleteTodoId = $todo->id;
-        $this->deleteTodoTitle = $todo->title;
-        $this->dispatch('showModal', id: 'deleteTodoModal');
+            $this->dispatch('open-modal', 'deleteTodoModal');
+        }
     }
 
     public function deleteTodo()
     {
-        if ($this->deleteTodoConfirmTitle !== $this->deleteTodoTitle) {
-            $this->addError('deleteTodoConfirmTitle', 'Judul konfirmasi tidak sesuai dengan judul todo yang akan dihapus.');
-            return;
+        $todo = Todo::find($this->deleteTodoId);
+        if ($todo && $todo->user_id === $this->auth->id) {
+            // Validasi konfirmasi judul
+            if ($this->deleteTodoConfirmTitle === $todo->title) {
+                $todo->delete();
+                $this->reset(['deleteTodoId', 'deleteTodoTitle', 'deleteTodoConfirmTitle']);
+                $this->dispatch('close-modal', 'deleteTodoModal'); // Tetap tutup modal
+                $this->dispatch('show-alert', [
+                    'type' => 'success',
+                    'title' => 'Berhasil!',
+                    'message' => 'Catatan keuangan berhasil dihapus.',
+                ]);
+            } else {
+                $this->addError('deleteTodoConfirmTitle', 'Konfirmasi judul tidak sesuai.');
+            }
+        }
+    }
+
+    public function render()
+    {
+        $query = Todo::where('user_id', $this->auth->id);
+
+        // Terapkan pencarian jika ada input
+        if ($this->search) {
+            $query->where('title', 'like', '%' . $this->search . '%');
         }
 
-        // Pastikan todo milik user yang sedang login sebelum menghapus
-        $todo = Todo::where('id', $this->deleteTodoId)
-            ->where('user_id', $this->auth->id)->first();
-
-        if ($todo) {
-            $todo->delete();
+        // Terapkan filter jika ada pilihan
+        if ($this->filterType !== '') {
+            $query->where('type', $this->filterType);
         }
 
-        $this->reset(['deleteTodoId', 'deleteTodoTitle', 'deleteTodoConfirmTitle']);
-        $this->dispatch('closeModal', id: 'deleteTodoModal');
+        $totalIncome = (clone $query)->where('type', 1)->sum('add_todo_amount');
+        $totalExpense = (clone $query)->where('type', 0)->sum('add_todo_amount');
+
+        $records = $query->latest()->paginate(20);
+
+        // Kirim event untuk update chart di frontend
+        $this->dispatch('update-chart', ['series' => [$totalIncome, $totalExpense]]);
+
+        return view('livewire.home-livewire', [
+            'records' => $records,
+        ]);
     }
 }

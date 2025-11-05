@@ -3,7 +3,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Ubah Todo</h5>
+                    <h5 class="modal-title">Ubah Catatan Keuangan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -15,18 +15,25 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Sudah Selesai?</label>
-                        <select class="form-select" wire:model="editTodoIsFinished">
-                            <option value="1" {{ $editTodoIsFinished ? 'selected' : '' }}>Ya</option>
-                            <option value="0" {{ !$editTodoIsFinished ? 'selected' : '' }}>Tidak</option>
-                            @error('editTodoIsFinished')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
+                        <label class="form-label">Jumlah (Nominal)</label>
+                        <input type="number" class="form-control" placeholder="Contoh: 50000" wire:model="editTodoAmount">
+                        @error('editTodoAmount')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jenis Catatan</label>
+                        <select class="form-select" wire:model="editTodoType">
+                            <option value="1">Pemasukan</option>
+                            <option value="0">Pengeluaran</option>
                         </select>
+                        @error('editTodoType')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Deskripsi</label>
-                        <textarea class="form-control" rows="4" wire:model="editTodoDescription"></textarea>
+                        <x-trix-editor id="edit_todo_description" wire:model.defer="editTodoDescription" :value="$editTodoDescription" />
                         @error('editTodoDescription')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror

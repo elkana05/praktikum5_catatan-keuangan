@@ -27,7 +27,7 @@
                 <img src="{{ asset('storage/' . $todo->cover) }}" alt="Cover" style="max-width: 100%;">
                 <hr>
             @endif
-            <p style="font-size: 18px;">{{ $todo->description }}</p>
+            <div style="font-size: 18px;">{!! $todo->description !!}</div>
         </div>
     </div>
 

@@ -21,6 +21,7 @@ class AuthLoginLivewire extends Component
         if (!Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
             // Jika login gagal
             $this->addError('email', 'Email atau kata sandi salah.');
+            return;
         }
 
         // Reset data

@@ -3,12 +3,12 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Hapus Todo</h5>
+                    <h5 class="modal-title">Hapus Catatan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-danger">
-                        Apakah kamu yakin ingin menghapus todo dengan judul <strong>"{{ $deleteTodoTitle }}"</strong>?
+                        Apakah kamu yakin ingin menghapus catatan dengan judul <strong>"{{ $deleteTodoTitle }}"</strong>?
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Konfirmasi Judul</label>
@@ -20,7 +20,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger">Lanjutkan, Hapus</button>
+                    <button type="submit" class="btn btn-danger"
+                        @if ($deleteTodoConfirmTitle !== $deleteTodoTitle) disabled @endif>
+                        Lanjutkan, Hapus</button>
                 </div>
             </div>
         </div>
