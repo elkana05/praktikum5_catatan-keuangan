@@ -44,5 +44,4 @@
         </div>
     </div>
     <x-modals.todos.view-cover :coverUrl="$todo->cover" />
-    <x-modals.todos.edit-cover :editCoverTodoFile="$editCoverTodoFile" />
 </div>

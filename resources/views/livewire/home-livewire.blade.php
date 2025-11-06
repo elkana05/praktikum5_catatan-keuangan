@@ -2,24 +2,20 @@
     @push('styles')
         <style>
             /* Tema Gelap */
-            [data-bs-theme="dark"] .trix-content {
+            [data-bs-theme="dark"] .trix-content,
+            [data-bs-theme="dark"] .trix-toolbar {
                 background-color: #2b3035;
                 color: #f8f9fa;
             }
 
             /* Tema Terang */
-            [data-bs-theme="light"] .trix-content {
+            [data-bs-theme="light"] .trix-content,
+            [data-bs-theme="light"] .trix-toolbar {
                 background-color: #ffffff;
                 color: #212529;
             }
 
-            /* Menyesuaikan toolbar untuk tema gelap */
-            [data-bs-theme="dark"] .trix-toolbar {
-                background-color: #343a40;
-            }
-
             [data-bs-theme="dark"] .trix-toolbar .trix-button-group {
-                background-color: #343a40;
                 border-color: #495057;
             }
 
@@ -32,16 +28,25 @@
             }
         </style>
     @endpush
+    {{-- Judul Halaman dan Sambutan --}}
+    <div class="mb-4">
+        <h1 class="display-5 fw-bold">Dashboard Keuangan</h1>
+        <p class="lead">Selamat datang kembali, {{ auth()->user()->name }}. Kelola catatan keuangan Anda di sini.</p>
+    </div>
+
     {{-- Filter Tanggal untuk Chart --}}
-    <div class="card bg-dark-subtle shadow-sm mb-4">
+    <div class="card bg-dark-subtle shadow-sm mb-4 rounded-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-funnel-fill"></i> Filter Diagram</h5>
+        </div>
         <div class="card-body">
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
-                    <label for="startDate" class="form-label">Filter Diagram Dari Tanggal</label>
+                    <label for="startDate" class="form-label">Dari Tanggal</label>
                     <input type="date" id="startDate" class="form-control form-control-dark" wire:model.live="startDate">
                 </div>
                 <div class="col-md-4">
-                    <label for="endDate" class="form-label">Sampai Tanggal</label>
+                    <label for="endDate" class="form-label">Hingga Tanggal</label>
                     <input type="date" id="endDate" class="form-control form-control-dark" wire:model.live="endDate">
                 </div>
                 <div class="col-md-4">
@@ -121,8 +126,10 @@
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTodoModal">
                         <i class="bi bi-plus-circle"></i> Tambah Catatan
                     </button>
-                    {{-- Tombol Pengalih Tema Ditambahkan Di Sini --}}
                     <x-theme-switcher />
+                    <a href="{{ route('auth.logout') }}" class="btn btn-outline-danger ms-2">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
                 </div>
             </div>
         </div>
@@ -168,7 +175,8 @@
                                 <td>Rp {{ number_format($record->amount, 0, ',', '.') }}</td>
                                 <td>{{ $record->created_at->format('d M Y') }}</td>
                                 <td>
-                                    <a href="{{ route('app.todos.detail', ['todo_id' => $record->id]) }}" wire:navigate
+                                    <a href="{{ route('app.todo.detail', ['todo_id' => $record->id]) }}" wire:navigate
+                                    <a href="{{ route('app.app.todo.detail', ['todo_id' => $record->id]) }}" wire:navigate
                                         class="btn btn-sm btn-outline-info rounded-pill px-3">
                                         <i class="bi bi-eye"></i>
                                     </a>
@@ -351,6 +359,17 @@
                 });
             });
 
+            // Listener untuk memperbarui chart saat data berubah
+            Livewire.on('update-charts', (event) => {
+                const income = Array.isArray(event) ? event[0].totalIncome : event.totalIncome;
+                const expense = Array.isArray(event) ? event[0].totalExpense : event.totalExpense;
+                const newSeriesData = [Number(income) || 0, Number(expense) || 0];
+
+                if (pieChart) {
+                    pieChart.updateSeries(newSeriesData, true); // true untuk animasi
+                    barChart.updateSeries([{ data: newSeriesData }], true);
+                }
+            });
         });
 
         let cleanupOpenModal, cleanupCloseModal;

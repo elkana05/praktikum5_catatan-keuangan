@@ -39,6 +39,13 @@
                         @enderror
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Tanggal</label>
+                        <input type="date" class="form-control" wire:model="editForm.created_at">
+                        @error('editForm.created_at')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Ubah Bukti (Opsional)</label>
                         <input type="file" class="form-control" wire:model="editForm.newCover">
                         <div wire:loading wire:target="editForm.newCover">Mengunggah...</div>

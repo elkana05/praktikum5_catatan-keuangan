@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Todo;
+use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -12,6 +13,7 @@ class TodoDetailLivewire extends Component
 {
     use WithFileUploads;
 
+    #[Url]
     public $todo;
     public $auth;
 
@@ -34,7 +36,8 @@ class TodoDetailLivewire extends Component
     public function render()
     {
         return view('livewire.todo-detail-livewire', [
-            'theme' => session('theme', 'dark'), // Kirim tema ke view
+            'todo' => $this->todo,
+            'theme' => session('theme', 'dark'),
         ]);
     }
 

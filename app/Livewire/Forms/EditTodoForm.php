@@ -22,14 +22,21 @@ class EditTodoForm extends Form
     #[Rule('nullable|string', attribute: 'Deskripsi')]
     public $description = '';
 
+    // Properti untuk menyimpan path cover lama
     public $oldCover;
 
+    // Properti untuk file cover baru yang diunggah
     #[Rule('nullable|image|max:2048', attribute: 'Bukti Baru')]
     public $newCover;
+
+    #[Rule('required|date', attribute: 'Tanggal')]
+    public $created_at = '';
 
     public function reset(...$properties)
     {
         parent::reset(...$properties);
         $this->type = 0; // Kembalikan ke default
+        $this->newCover = null; // Pastikan file baru di-reset
+        $this->oldCover = null; // Pastikan cover lama di-reset
     }
 }

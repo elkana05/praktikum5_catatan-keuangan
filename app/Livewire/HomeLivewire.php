@@ -36,6 +36,8 @@ class HomeLivewire extends Component
     public function mount()
     {
         $this->auth = Auth::user();
+        // Inisialisasi tanggal pada form tambah dengan tanggal hari ini
+        $this->addForm->created_at = now()->format('Y-m-d');
     }
 
     public function updatingSearch()
@@ -86,6 +88,7 @@ class HomeLivewire extends Component
             'cover' => $coverPath,
             'description' => $this->addForm->description,
             'created_at' => $this->addForm->created_at,
+            'updated_at' => $this->addForm->created_at,
         ]);
         $this->addForm->reset();
         $this->dispatch('close-modal', 'addTodoModal'); // Tetap tutup modal
@@ -109,6 +112,7 @@ class HomeLivewire extends Component
             $this->editForm->description = $todo->description;
             $this->editForm->oldCover = $todo->cover;
             $this->editForm->newCover = null; // Reset pratinjau file baru
+            $this->editForm->created_at = $todo->created_at->format('Y-m-d');
             
             $this->dispatch('open-modal', 'editTodoModal');
         }
@@ -141,6 +145,8 @@ class HomeLivewire extends Component
                 'type' => $this->editForm->type,
                 'description' => $this->editForm->description,
                 'cover' => $coverPath, // Update dengan path baru atau path lama
+                'created_at' => $this->editForm->created_at,
+                'updated_at' => $this->editForm->created_at,
             ]);
         }
         $this->editForm->reset(); // Reset form setelah berhasil
@@ -204,7 +210,7 @@ class HomeLivewire extends Component
         }
 
         // Hitung total untuk chart berdasarkan query yang sudah difilter tanggal
-        $totalIncome = $chartQuery->where('type', 1)->sum('amount');
+        $totalIncome = (clone $chartQuery)->where('type', 1)->sum('amount');
         $totalExpense = (clone $chartQuery)->where('type', 0)->sum('amount');
 
         // Hitung saldo akhir dari SEMUA data, bukan hanya dari rentang tanggal chart

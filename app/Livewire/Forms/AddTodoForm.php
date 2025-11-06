@@ -27,12 +27,6 @@ class AddTodoForm extends Form
     #[Rule('required|date', attribute: 'Tanggal')]
     public $created_at = '';
 
-    public function boot()
-    {
-        // Inisialisasi tanggal dengan hari ini
-        $this->created_at = now()->format('Y-m-d');
-    }
-
     public function reset(...$properties)
     {
         parent::reset(...$properties);
