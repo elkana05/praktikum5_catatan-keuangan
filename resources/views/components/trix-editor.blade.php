@@ -1,16 +1,26 @@
-@props(['value' => ''])
+@props(['id', 'value' => ''])
 
 <div
     wire:ignore
-    {{ $attributes }}
+    {{ $attributes->whereDoesntStartWith('wire:model') }}
 >
-    <input id="{{ $attributes->get('id') }}" type="hidden" name="content" value="{{ $value }}">
-    <trix-editor input="{{ $attributes->get('id') }}" class="form-control"></trix-editor>
+    <input id="{{ $id }}" type="hidden" name="content" value="{{ $value }}">
+    <trix-editor input="{{ $id }}" class="form-control"></trix-editor>
 </div>
 
+@script
 <script>
-    var trixEditor = document.getElementById("{{ $attributes->get('id') }}")
-    addEventListener("trix-blur", function(event) {
-        @this.set('{{ $attributes->get('wire:model') }}', trixEditor.getAttribute('value'))
-    })
+    document.addEventListener('trix-change', (event) => {
+        if (event.target.id.startsWith('{{ $id }}')) {
+            @this.set('{{ $attributes->get('wire:model') }}', event.target.value);
+        }
+    });
+
+    Livewire.on('reset-trix', (id) => {
+        if (id === '{{ $id }}') {
+            const trixEditor = document.querySelector(`trix-editor[input='{{ $id }}']`);
+            trixEditor.editor.loadHTML('');
+        }
+    });
 </script>
+@endscript

@@ -1,36 +1,48 @@
-<div class="mt-3">
+<div class="mt-3" data-bs-theme="{{ $theme }}">
     <div class="card">
-        <div class="card-header d-flex">
-            <div class="flex-fill">
-                <a href="{{ route('app.home') }}" class="text-decoration-none">
-                    <small class="text-muted">
-                        &lt; Kembali
-                    </small>
-                </a>
-                <h3>
-                    {{ $todo->title }}
-                    @if ($todo->is_finished)
-                        <small class="badge bg-success">Selesai</small>
-                    @else
-                        <small class="badge bg-danger">Belum selesai</small>
-                    @endif
-                </h3>
-            </div>
-            <div>
-                <button class="btn btn-warning" data-bs-target="#editCoverTodoModal" data-bs-toggle="modal">
-                    Ubah Cover
-                </button>
-            </div>
+        <div class="card-header">
+            <a href="{{ route('app.home') }}" class="text-decoration-none text-muted" wire:navigate>
+                &lt; Kembali ke Daftar
+            </a>
         </div>
         <div class="card-body">
+            <h2 class="card-title">{{ $todo->title }}</h2>
+            <div class="mb-3">
+                @if ($todo->type == 1)
+                    <span class="badge bg-success fs-6">Pemasukan</span>
+                @else
+                    <span class="badge bg-danger fs-6">Pengeluaran</span>
+                @endif
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Jumlah:</strong></p>
+                    <h4>Rp {{ number_format($todo->amount, 0, ',', '.') }}</h4>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Tanggal Dibuat:</strong></p>
+                    <h4>{{ $todo->created_at->format('d F Y') }}</h4>
+                </div>
+            </div>
+
+            <hr>
+
+            <h5 class="mb-3">Deskripsi:</h5>
+            <div class="trix-content">{!! $todo->description !!}</div>
+
             @if ($todo->cover)
-                <img src="{{ asset('storage/' . $todo->cover) }}" alt="Cover" style="max-width: 100%;">
-                <hr>
+                <div class="mt-4">
+                    <p>
+                        <strong>Lampiran:</strong>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#viewCoverModal">
+                            Lihat Bukti
+                        </a>
+                    </p>
+                </div>
             @endif
-            <div style="font-size: 18px;">{!! $todo->description !!}</div>
         </div>
     </div>
-
-    {{-- Modals --}}
-    @include('components.modals.todos.edit-cover')
+    <x-modals.todos.view-cover :coverUrl="$todo->cover" />
+    <x-modals.todos.edit-cover :editCoverTodoFile="$editCoverTodoFile" />
 </div>

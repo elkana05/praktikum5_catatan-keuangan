@@ -2,30 +2,26 @@
 
 namespace App\Livewire;
 
+use Livewire\Attributes\WithoutUrl;
+use App\Livewire\Forms\AddTodoForm;
+use App\Livewire\Forms\EditTodoForm;
 use App\Models\Todo;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 class HomeLivewire extends Component
 {
     use WithPagination;
+    use WithFileUploads;
     public $auth;
     protected $paginationTheme = 'bootstrap';
 
-    // Properti untuk Tambah Catatan
-    public $addTodoTitle;
-    public $addTodoAmount;
-    public $addTodoType = 0; // Default: Pengeluaran
-    public $addTodoDescription;
-
-    // Properti untuk Edit Catatan
-    public $editTodoId;
-    public $editTodoTitle;
-    public $editTodoAmount;
-    public $editTodoType;
-    public $editTodoDescription;
-
+    // Menggunakan Form Objects
+    public AddTodoForm $addForm;
+    public EditTodoForm $editForm;
+    
     // Properti untuk Hapus Catatan
     public $deleteTodoId;
     public $deleteTodoTitle;
@@ -34,6 +30,8 @@ class HomeLivewire extends Component
     // Properti untuk Pencarian dan Filter
     public $search = '';
     public $filterType = '';
+    public $startDate = '';
+    public $endDate = '';
 
     public function mount()
     {
@@ -50,25 +48,49 @@ class HomeLivewire extends Component
         $this->resetPage();
     }
 
+    public function updatingStartDate()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingEndDate()
+    {
+        $this->resetPage();
+    }
+
+    public function resetDateFilter()
+    {
+        $this->reset('startDate', 'endDate');
+    }
+
     public function addTodo()
     {
-        $this->validate([
-            'addTodoTitle' => 'required|string|max:255',
-            'addTodoAmount' => 'required|numeric',
-            'addTodoType' => 'required|boolean',
-            'addTodoDescription' => 'nullable|string',
-        ]);
+        // Livewire akan secara otomatis mengisi data ke $this->addForm sebelum validate() dipanggil
+
+        $this->addForm->validate();
+
+        $coverPath = null;
+        if ($this->addForm->cover) {
+            $userId = $this->auth->id;
+            $dateNumber = now()->format('YmdHis');
+            $extension = $this->addForm->cover->getClientOriginalExtension();
+            $filename = $userId . '_' . $dateNumber . '.' . $extension;
+            $coverPath = $this->addForm->cover->storeAs('covers', $filename, 'public');
+        }
 
         Todo::create([
             'user_id' => $this->auth->id,
-            'title' => $this->addTodoTitle,
-            'add_todo_amount' => $this->addTodoAmount,
-            'type' => $this->addTodoType,
-            'description' => $this->addTodoDescription,
+            'title' => $this->addForm->title,
+            'amount' => $this->addForm->amount,
+            'type' => $this->addForm->type,
+            'cover' => $coverPath,
+            'description' => $this->addForm->description,
+            'created_at' => $this->addForm->created_at,
         ]);
-
-        $this->reset(['addTodoTitle', 'addTodoAmount', 'addTodoType', 'addTodoDescription']);
+        $this->addForm->reset();
         $this->dispatch('close-modal', 'addTodoModal'); // Tetap tutup modal
+        $this->dispatch('reset-trix', 'add_todo_description');
+
         $this->dispatch('show-alert', [
             'type' => 'success',
             'title' => 'Berhasil!',
@@ -80,36 +102,48 @@ class HomeLivewire extends Component
     {
         $todo = Todo::find($todoId);
         if ($todo && $todo->user_id === $this->auth->id) {
-            $this->editTodoId = $todo->id;
-            $this->editTodoTitle = $todo->title;
-            $this->editTodoAmount = $todo->add_todo_amount;
-            $this->editTodoType = $todo->type;
-            $this->editTodoDescription = $todo->description;
-
+            $this->editForm->todoId = $todo->id;
+            $this->editForm->title = $todo->title;
+            $this->editForm->amount = $todo->amount;
+            $this->editForm->type = $todo->type;
+            $this->editForm->description = $todo->description;
+            $this->editForm->oldCover = $todo->cover;
+            $this->editForm->newCover = null; // Reset pratinjau file baru
+            
             $this->dispatch('open-modal', 'editTodoModal');
         }
     }
 
     public function editTodo()
     {
-        $this->validate([
-            'editTodoTitle' => 'required|string|max:255',
-            'editTodoAmount' => 'required|numeric',
-            'editTodoType' => 'required|boolean',
-            'editTodoDescription' => 'nullable|string',
-        ]);
+        $this->editForm->validate();
 
-        $todo = Todo::find($this->editTodoId);
+        $todo = Todo::find($this->editForm->todoId);
         if ($todo && $todo->user_id === $this->auth->id) {
+            $coverPath = $todo->cover; // Simpan path lama
+
+            if ($this->editForm->newCover) {
+                // Hapus cover lama jika ada
+                if ($coverPath && Storage::disk('public')->exists($coverPath)) {
+                    Storage::disk('public')->delete($coverPath);
+                }
+                // Simpan cover baru
+                $userId = $this->auth->id;
+                $dateNumber = now()->format('YmdHis');
+                $extension = $this->editForm->newCover->getClientOriginalExtension();
+                $filename = $userId . '_' . $dateNumber . '.' . $extension;
+                $coverPath = $this->editForm->newCover->storeAs('covers', $filename, 'public');
+            }
+
             $todo->update([
-                'title' => $this->editTodoTitle,
-                'add_todo_amount' => $this->editTodoAmount,
-                'type' => $this->editTodoType,
-                'description' => $this->editTodoDescription,
+                'title' => $this->editForm->title,
+                'amount' => $this->editForm->amount,
+                'type' => $this->editForm->type,
+                'description' => $this->editForm->description,
+                'cover' => $coverPath, // Update dengan path baru atau path lama
             ]);
         }
-
-        $this->reset(['editTodoId', 'editTodoTitle', 'editTodoAmount', 'editTodoType', 'editTodoDescription']);
+        $this->editForm->reset(); // Reset form setelah berhasil
         $this->dispatch('close-modal', 'editTodoModal'); // Tetap tutup modal
         $this->dispatch('show-alert', [
             'type' => 'success',
@@ -145,35 +179,62 @@ class HomeLivewire extends Component
                     'message' => 'Catatan keuangan berhasil dihapus.',
                 ]);
             } else {
-                $this->addError('deleteTodoConfirmTitle', 'Konfirmasi judul tidak sesuai.');
+                // $this->addError('deleteTodoConfirmTitle', 'Konfirmasi judul tidak sesuai.');
+                $this->dispatch('show-alert', [
+                    'type' => 'error',
+                    'title' => 'Gagal!',
+                    'message' => 'Konfirmasi judul tidak sesuai. Catatan tidak dihapus.',
+                ]);
             }
         }
     }
 
     public function render()
     {
-        $query = Todo::where('user_id', $this->auth->id);
+        // Query dasar untuk semua data pengguna
+        $baseQuery = Todo::where('user_id', $this->auth->id);
 
-        // Terapkan pencarian jika ada input
+        // Query untuk chart, dengan filter tanggal
+        $chartQuery = (clone $baseQuery);
+        if ($this->startDate) {
+            $chartQuery->whereDate('created_at', '>=', $this->startDate);
+        }
+        if ($this->endDate) {
+            $chartQuery->whereDate('created_at', '<=', $this->endDate);
+        }
+
+        // Hitung total untuk chart berdasarkan query yang sudah difilter tanggal
+        $totalIncome = $chartQuery->where('type', 1)->sum('amount');
+        $totalExpense = (clone $chartQuery)->where('type', 0)->sum('amount');
+
+        // Hitung saldo akhir dari SEMUA data, bukan hanya dari rentang tanggal chart
+        $overallIncome = (clone $baseQuery)->where('type', 1)->sum('amount');
+        $overallExpense = (clone $baseQuery)->where('type', 0)->sum('amount');
+        $balance = $overallIncome - $overallExpense;
+
+        // Terapkan pencarian pada query yang difilter
         if ($this->search) {
-            $query->where('title', 'like', '%' . $this->search . '%');
+            $baseQuery->where('title', 'like', '%' . $this->search . '%');
         }
 
-        // Terapkan filter jika ada pilihan
+        // Terapkan filter jenis pada query yang difilter
         if ($this->filterType !== '') {
-            $query->where('type', $this->filterType);
+            $baseQuery->where('type', $this->filterType);
         }
+        $records = $baseQuery->latest()->paginate(20);
 
-        $totalIncome = (clone $query)->where('type', 1)->sum('add_todo_amount');
-        $totalExpense = (clone $query)->where('type', 0)->sum('add_todo_amount');
-
-        $records = $query->latest()->paginate(20);
-
-        // Kirim event untuk update chart di frontend
-        $this->dispatch('update-chart', ['series' => [$totalIncome, $totalExpense]]);
+        // Kirim event ke browser untuk update chart
+        $this->dispatch('update-charts', [
+            'totalIncome' => $totalIncome,
+            'totalExpense' => $totalExpense,
+        ]);
 
         return view('livewire.home-livewire', [
             'records' => $records,
+            'balance' => $overallIncome - $overallExpense, // Saldo dari semua data
+            'totalIncome' => $overallIncome, // Total pemasukan dari semua data
+            'totalExpense' => $overallExpense, // Total pengeluaran dari semua data
+            'theme' => session('theme', 'dark'), // Kirim tema ke view
         ]);
     }
 }

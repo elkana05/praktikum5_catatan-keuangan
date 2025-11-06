@@ -12,7 +12,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Konfirmasi Judul</label>
-                        <input type="text" class="form-control" wire:model="deleteTodoConfirmTitle">
+                        <input type="text" class="form-control" name="deleteTodoConfirmTitle" wire:model.live="deleteTodoConfirmTitle">
                         @error('deleteTodoConfirmTitle')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror

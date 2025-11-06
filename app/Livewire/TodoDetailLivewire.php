@@ -33,7 +33,9 @@ class TodoDetailLivewire extends Component
 
     public function render()
     {
-        return view('livewire.todo-detail-livewire');
+        return view('livewire.todo-detail-livewire', [
+            'theme' => session('theme', 'dark'), // Kirim tema ke view
+        ]);
     }
 
     // Ubah Cover Todo

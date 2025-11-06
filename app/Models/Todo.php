@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Todo extends Model
 {
     protected $table = 'todos';
-    protected $fillable = ['user_id', 'title', 'description', 'is_finished', 'cover'];
+    protected $fillable = ['user_id', 'title', 'amount', 'type', 'description', 'is_finished', 'cover'];
     public $timestamps = true;
 }
-
